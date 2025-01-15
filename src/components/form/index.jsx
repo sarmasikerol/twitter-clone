@@ -1,9 +1,13 @@
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import React from "react";
+import React, { useState } from "react";
 import { BsCardImage } from "react-icons/bs";
 import { db } from "../../firebase";
+import uploadToStorage from "../../firebase/uploadToStorage";
+import Loader from "../loader"
 
 const Form = ({ user }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -14,7 +18,10 @@ const Form = ({ user }) => {
     // yazı ve resim içeriği yoksa fn durdur
     if (!text && !file) return toast.warning("Lütfen içerik giriniz");
 
+    setIsLoading(true);
+
     //* resmi storage kaydet
+    const url = file ?  await uploadToStorage(file) : null;
 
     // koleksiyonun referansını al
     const tweetsCol = collection(db, "tweets");
@@ -22,7 +29,7 @@ const Form = ({ user }) => {
     // koleksiyona yeni tweet belgesi ekle
     await addDoc(tweetsCol, {
       textContent: text,
-      imageContent: null,
+      imageContent: url,
       isEdited: false,
       likes: [],
       user: {
@@ -32,7 +39,11 @@ const Form = ({ user }) => {
       },
       createdAt: serverTimestamp(),
     });
+
+    setIsLoading(false);
+
     // formu sıfırla
+    e.target.reset();
   };
 
   return (
@@ -60,8 +71,11 @@ const Form = ({ user }) => {
             <BsCardImage />
           </label>
 
-          <button className="bg-blue-600 px-3 py-2 rounded-full min-w-[85px] min-h-[40px] transition hover:bg-blue-800">
-            Tweetle
+          <button
+            disabled={isLoading}
+            className="bg-blue-600 px-3 py-2 rounded-full min-w-[85px] min-h-[40px] transition hover:bg-blue-800 grid place-items-center"
+          >
+            {isLoading ? <Loader /> : "Tweetle"}
           </button>
         </div>
       </div>
