@@ -1,32 +1,34 @@
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import React, { useState } from "react";
 import { BsCardImage } from "react-icons/bs";
-import { db } from "../../firebase";
+import { toast } from "react-toastify";
+import { db } from "../../firebase/index";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import uploadToStorage from "../../firebase/uploadToStorage";
-import Loader from "../loader"
+import Loader from "../loader";
 
 const Form = ({ user }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState();
 
+  //form gönderilince
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // inputlardaki verilere eriş
+    //1) inputlardaki verilere eriş
     const text = e.target[0].value.trim();
     const file = e.target[1].files[0];
 
-    // yazı ve resim içeriği yoksa fn durdur
+    //2) yazı ve resim içeirği yoksa fonk. durdur
     if (!text && !file) return toast.warning("Lütfen içerik giriniz");
 
     setIsLoading(true);
 
-    //* resmi storage kaydet
-    const url = file ?  await uploadToStorage(file) : null;
+    //3) resmi storage'a kaydet
+    const url = await uploadToStorage(file);
 
-    // koleksiyonun referansını al
+    //4) kollkesiyonun referansını al
     const tweetsCol = collection(db, "tweets");
 
-    // koleksiyona yeni tweet belgesi ekle
+    //5) kolleksiyona yeni tweet belgesi ekle
     await addDoc(tweetsCol, {
       textContent: text,
       imageContent: url,
@@ -42,19 +44,19 @@ const Form = ({ user }) => {
 
     setIsLoading(false);
 
-    // formu sıfırla
+    // 6) formu sıfırla
     e.target.reset();
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-b border-zinc-600 p-5 flex gap-3"
+      className="border-b border-zinc-600 p-5 flex gap-3 "
     >
       <img
         src={user?.photoURL}
-        alt=""
         className="h-[35px] md:h-[45px] rounded-full mt-1"
+        alt="profile pic"
       />
 
       <div className="w-full">
